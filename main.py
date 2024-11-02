@@ -39,6 +39,7 @@ player_surf = pygame.image.load(resource_path(join('images', 'player.png'))).con
 bullet_surf = pygame.image.load(resource_path(join('images', 'laser.png'))).convert_alpha()
 meteor_surf = pygame.image.load(resource_path(join('images', 'meteor.png'))).convert_alpha()
 star_surf = pygame.image.load(resource_path(join('images', 'star.png'))).convert_alpha()
+explosion_surf = pygame.image.load(resource_path(join('images', 'explosion.png'))).convert_alpha()
 
 # Load SFX
 meteor_explosion = pygame.mixer.Sound(resource_path(join("sounds", "explosion (9).wav")))
@@ -148,6 +149,7 @@ for _ in range(STAR_COUNT):
 def main():
     frame_count = 0
     running = True
+    show_death_screen = False
 
     while running:
         screen.fill(BLACK)
@@ -157,6 +159,27 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+                
+        if not player.health < 1:
+            show_death_screen = True
+
+        if show_death_screen:
+            screen.fill(BLACK)
+            font = pygame.font.Font(None, 72)
+            text_surface = font.render("You Died", True, WHITE)
+            screen.blit(text_surface, (WIDTH // 2 - text_surface.get_width() // 2, HEIGHT // 3))
+            
+            score_text = font.render(f"Final Score: {player.score}", True, WHITE)
+            screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2))
+
+            retry_text = font.render("Press Enter to Retry", True, WHITE)
+            screen.blit(retry_text, (WIDTH // 2 - retry_text.get_width() // 2, HEIGHT * 2 // 3))
+
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RETURN]:  # Enter key to retry
+                main()
+            pygame.display.flip()
+            continue
 
         # Spawn enemies based on the frame count
         if frame_count % ENEMY_SPAWN_RATE == 0:
