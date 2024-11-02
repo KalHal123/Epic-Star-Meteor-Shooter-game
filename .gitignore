@@ -1,4 +1,5 @@
 git-push.bat
 py-installer-compile-command.txt
+tempmain.py
 /dist/
 /build/
