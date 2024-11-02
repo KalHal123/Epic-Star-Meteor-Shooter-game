@@ -12,7 +12,7 @@ pygame.mixer.init()
 # Screen settings
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Epic Shooter Game")
+pygame.display.set_caption("Epic Start Meteor Shooter")
 
 # Colors
 WHITE = (255, 255, 255)
