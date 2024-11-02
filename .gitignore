@@ -1,5 +1,6 @@
 git-push.bat
 py-installer-compile-command.txt
 tempmain.py
+main2.py
 /dist/
 /build/
