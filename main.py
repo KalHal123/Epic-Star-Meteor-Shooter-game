@@ -144,24 +144,33 @@ for _ in range(STAR_COUNT):
     star = Star(stars)
     stars.add(star)
     all_sprites.add(star)
+last_speed_increase_score = 0  # Initialize outside the main loop
 
 # Main game loop
 def main():
     frame_count = 0
     running = True
     show_death_screen = False
+    player.score = 0
+    global BULLET_SPEED
+    global last_speed_increase_score
 
     while running:
         screen.fill(BLACK)
+        
 
         # Event handling
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
                 
-        if not player.health < 1:
-            show_death_screen = True
+#        if player.health < 1:
+#            show_death_screen = True
 
         if show_death_screen:
             screen.fill(BLACK)
@@ -179,6 +188,8 @@ def main():
             if keys[pygame.K_RETURN]:  # Enter key to retry
                 main()
             pygame.display.flip()
+            player.health = 3
+            enemy.speed = 2
             continue
 
         # Spawn enemies based on the frame count
@@ -187,6 +198,11 @@ def main():
             enemy.speed = ENEMY_SPEED_BASE + player.score * 0.1  # Increase speed with score
             enemies.add(enemy)
             all_sprites.add(enemy)
+
+        # Update bullet speed every 10 points
+        if player.score % 10 == 0 and player.score != last_speed_increase_score:
+            BULLET_SPEED += 1  # Increase bullet speed
+            last_speed_increase_score = player.score  # Update to current score
 
         # Update all sprites
         all_sprites.update()
@@ -204,8 +220,9 @@ def main():
             player.take_damage()
             if player.health <= 0:
                 player_death.play()
-                time.sleep(0.6)
-                running = False  # End game if health reaches 0
+                show_death_screen = True
+#                time.sleep(0.6)
+#                running = False  # End game if health reaches 0
 
         # Draw stars in the background
         stars.draw(screen)
