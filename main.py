@@ -22,8 +22,8 @@ GREEN = (0, 255, 0)
 
 # Game settings
 FPS = 60
-PLAYER_SPEED = 5
-BULLET_SPEED = 10
+PLAYER_SPEED = 50
+BULLET_SPEED = 50
 ENEMY_SPEED_BASE = 2
 ENEMY_SPAWN_RATE = 30  # Frames until a new enemy spawns
 STAR_COUNT = 20
@@ -70,7 +70,7 @@ class Player(pygame.sprite.Sprite):
         self.health = 3
         self.score = 0
         self.can_shoot = True
-        self.shoot_cooldown = 250
+        self.shoot_cooldown = 15
         self.last_shot = pygame.time.get_ticks()
 
     def update(self):
@@ -175,7 +175,7 @@ def main():
         if show_death_screen:
             screen.fill(BLACK)
             font = pygame.font.Font(None, 72)
-            text_surface = font.render("You Died", True, WHITE)
+            text_surface = font.render("You died!", True, WHITE)
             screen.blit(text_surface, (WIDTH // 2 - text_surface.get_width() // 2, HEIGHT // 3))
             
             score_text = font.render(f"Final Score: {player.score}", True, WHITE)
