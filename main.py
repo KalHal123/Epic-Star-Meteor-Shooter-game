@@ -4,7 +4,9 @@ import sys
 import time
 from os.path import join
 import os
-
+VERSION = "v1.2.6"
+AUTHOR = "Thph793"
+DATE = "15/12/2024"
 # Initialize Pygame
 pygame.init()
 pygame.mixer.init()
@@ -12,9 +14,10 @@ pygame.mixer.init()
 # Screen settings
 WIDTH, HEIGHT = 800, 600
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Epic Start Meteor Shooter")
+pygame.display.set_caption("Epic Star Meteor Shooter v1.2.6")
 
 # Colors
+GRAY = (60, 60, 60)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
@@ -22,8 +25,8 @@ GREEN = (0, 255, 0)
 
 # Game settings
 FPS = 60
-PLAYER_SPEED = 50
-BULLET_SPEED = 50
+PLAYER_SPEED = 10
+BULLET_SPEED = 10
 ENEMY_SPEED_BASE = 2
 ENEMY_SPAWN_RATE = 30  # Frames until a new enemy spawns
 STAR_COUNT = 20
@@ -70,7 +73,7 @@ class Player(pygame.sprite.Sprite):
         self.health = 3
         self.score = 0
         self.can_shoot = True
-        self.shoot_cooldown = 15
+        self.shoot_cooldown = 200
         self.last_shot = pygame.time.get_ticks()
 
     def update(self):
@@ -238,6 +241,10 @@ def main():
         # Draw score
         score_text = font.render(f"Score: {player.score}", True, WHITE)
         screen.blit(score_text, (10, 10))
+        
+        # Draw version text
+        version_text = font.render(f"{VERSION}-{DATE}-{AUTHOR}", True, GRAY)
+        screen.blit(version_text, (1, 575))
 
         # Update the display
         pygame.display.flip()
