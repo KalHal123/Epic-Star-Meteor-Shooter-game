@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[('images', 'images'), ('sounds', 'sounds')],
+    datas=[('images/*', 'images'), ('sounds/*', 'sounds')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
@@ -34,4 +34,6 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    version='version_info.rc',
+    icon=['player.ico'],
 )
